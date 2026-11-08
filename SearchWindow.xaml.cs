@@ -304,7 +304,6 @@ public partial class SearchWindow : Window
             Color = dark ? Colors.Black : Colors.White, BlurRadius = 9, ShadowDepth = 0, Opacity = dark ? 0.6 : 0.75,
             RenderingBias = System.Windows.Media.Effects.RenderingBias.Performance,
         };
-        Themes.Apply(Resources, AppSettings.Current.CurrentTheme, dark, 0x8C, 0xA6);
         Placeholder.Text = L.T("Ask anything", "Bir şey sor");
     }
 

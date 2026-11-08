@@ -22,7 +22,7 @@
         <SolidColorBrush x:Key="Fg" Color="White" />
         <SolidColorBrush x:Key="FgDim" Color="#99FFFFFF" />
         <SolidColorBrush x:Key="Tint" Color="#661C1C1E" />
-        <SolidColorBrush x:Key="Accent" Color="#A8C7FA" />
+        <SolidColorBrush x:Key="Accent" Color="#0A84FF" />
         <SolidColorBrush x:Key="Chip" Color="#26FFFFFF" />
         <SolidColorBrush x:Key="NoChip" Color="Transparent" />
         <SolidColorBrush x:Key="Hairline" Color="#26FFFFFF" />

@@ -20,7 +20,6 @@ public sealed class SettingsWindow : Window
     private readonly StackPanel _content = new() { Margin = new Thickness(22, 14, 22, 24) };
     private readonly Border _card = new() { CornerRadius = new CornerRadius(20), BorderThickness = new Thickness(1) };
     private bool _builtDark, _builtTurkish;
-    private string _builtTheme = "";
     private Button? _recorder;
     private TextBlock? _recorderNote;
     private bool _recording;
@@ -61,7 +60,7 @@ public sealed class SettingsWindow : Window
         Topmost = true;
         try { Icon = BitmapFrame.Create(new Uri("pack://application:,,,/Assets/odak.ico")); } catch { }
 
-        _card.Child = new ScrollViewer { Content = _content, VerticalScrollBarVisibility = ScrollBarVisibility.Hidden, MaxHeight = SystemParameters.WorkArea.Height * 0.9 };
+        _card.Child = _content;
         _card.Effect = new DropShadowEffect { BlurRadius = 46, ShadowDepth = 14, Direction = 270, Opacity = 0.38 };
         _card.MouseLeftButtonDown += (_, e) => { if (e.ButtonState == MouseButtonState.Pressed && !_recording) DragMove(); };
         Content = new Border { Padding = new Thickness(30, 20, 30, 44), Child = _card };
@@ -85,7 +84,7 @@ public sealed class SettingsWindow : Window
     private void OnSettingsChanged()
     {
         var s = AppSettings.Current;
-        if (s.IsDark != _builtDark || s.IsTurkish != _builtTurkish || s.CurrentTheme.Key != _builtTheme) Dispatcher.Invoke(Rebuild);
+        if (s.IsDark != _builtDark || s.IsTurkish != _builtTurkish) Dispatcher.Invoke(Rebuild);
     }
 
     private void Rebuild()
@@ -93,7 +92,6 @@ public sealed class SettingsWindow : Window
         var s = AppSettings.Current;
         bool dark = _builtDark = s.IsDark;
         _builtTurkish = s.IsTurkish;
-        _builtTheme = s.CurrentTheme.Key;
         _fg = Frozen(dark ? Colors.White : Colors.Black);
         _fgDim = Frozen(dark ? Color.FromArgb(0x99, 0xEB, 0xEB, 0xF5) : Color.FromArgb(0x99, 0x3C, 0x3C, 0x43));
         _groupBg = Frozen(dark ? Color.FromRgb(0x2C, 0x2C, 0x2E) : Colors.White);
@@ -103,13 +101,6 @@ public sealed class SettingsWindow : Window
         _switchOff = Frozen(dark ? Color.FromRgb(0x39, 0x39, 0x3D) : Color.FromRgb(0xE9, 0xE9, 0xEB));
         _card.Background = Frozen(dark ? Color.FromRgb(0x1C, 0x1C, 0x1E) : Color.FromRgb(0xF2, 0xF2, 0xF7));
         _card.BorderBrush = Frozen(dark ? Color.FromArgb(0x33, 0xFF, 0xFF, 0xFF) : Color.FromArgb(0x1F, 0x00, 0x00, 0x00));
-        if (s.CurrentTheme is { Frame: { } frame, Toolbar: { } toolbar, Omni: { } omni })
-        {
-            _card.Background = Frozen(Themes.Parse(frame));
-            _groupBg = Frozen(Themes.Parse(toolbar));
-            _segBg = Frozen(Themes.Parse(omni));
-            _segOn = Frozen(Themes.Parse(frame));
-        }
         Title = L.T("Spotlight AI Settings", "Spotlight AI Ayarları");
 
         _content.Children.Clear();
@@ -117,8 +108,14 @@ public sealed class SettingsWindow : Window
         _content.Children.Add(AppCard());
 
         // Appearance
-        _content.Children.Add(new TextBlock { Text = L.T("Theme", "Tema"), Foreground = _fg, FontSize = 14.5, FontWeight = FontWeights.SemiBold, Margin = new Thickness(14, 0, 0, 8) });
-        _content.Children.Add(ThemeGrid(s));
+        // Appearance
+        _content.Children.Add(Group(
+            Row("", Color.FromRgb(0xAF, 0x52, 0xDE), L.T("Appearance", "Görünüm"), Segmented(
+                new[] { L.T("System", "Sistem"), L.T("Light", "Açık"), L.T("Dark", "Koyu") },
+                (int)s.Theme,
+                i => { s.Theme = (ThemeMode)i; s.Save(); }))));
+        _content.Children.Add(Footnote(L.T("System follows the Windows light or dark app mode.",
+                                           "Sistem, Windows'un açık/koyu uygulama moduna uyar.")));
 
         // Language and search
         _content.Children.Add(Group(
@@ -237,73 +234,6 @@ public sealed class SettingsWindow : Window
         Content = text, Height = 28, MinWidth = 60, Margin = new Thickness(6, 0, 0, 0), Padding = new Thickness(10, 0, 10, 0), FontSize = 12.5,
         Foreground = _fg, Background = _segBg, Template = RoundTemplate(7), Cursor = Cursors.Hand,
     };
-
-    // ---- Theme grid, like Mondium's
-
-    private Border ThemeGrid(AppSettings s)
-    {
-        var grid = new System.Windows.Controls.Primitives.UniformGrid { Columns = 6, Margin = new Thickness(8) };
-        foreach (var theme in Themes.All) grid.Children.Add(ThemeCard(s, theme));
-        return new Border { CornerRadius = new CornerRadius(12), Background = _groupBg, Child = grid, Margin = new Thickness(0, 0, 0, 20) };
-    }
-
-    private Border ThemeCard(AppSettings s, AppTheme theme)
-    {
-        bool selected = s.CurrentTheme.Key == theme.Key;
-        var bands = new Grid { ClipToBounds = true };
-        Border Band(string color, int row, int column = 0, int columnSpan = 2)
-        {
-            var band = new Border { Background = Frozen(Themes.Parse(color)) };
-            Grid.SetRow(band, row); Grid.SetColumn(band, column); Grid.SetColumnSpan(band, columnSpan);
-            return band;
-        }
-        for (int i = 0; i < 2; i++) bands.ColumnDefinitions.Add(new ColumnDefinition());
-        bands.RowDefinitions.Add(new RowDefinition { Height = new GridLength(14) });
-        bands.RowDefinitions.Add(new RowDefinition());
-        bands.RowDefinitions.Add(new RowDefinition { Height = new GridLength(12) });
-        if (theme.Frame != null)
-        {
-            bands.Children.Add(Band(theme.Frame, 0));
-            bands.Children.Add(Band(theme.Mode == "dark" ? theme.Toolbar! : theme.Omni!, 1));
-            bands.Children.Add(Band(theme.Accent!, 2));
-        }
-        else
-        {
-            void Half(int column, string frame, string body)
-            {
-                bands.Children.Add(Band(frame, 0, column, 1));
-                var lower = Band(body, 1, column, 1);
-                Grid.SetRowSpan(lower, 2);
-                bands.Children.Add(lower);
-            }
-            if (theme.Mode != "dark") Half(0, "#dfe3e7", "#ffffff"); else Half(0, "#1f1f1f", "#3c3c3c");
-            if (theme.Mode == "light") Half(1, "#dfe3e7", "#ffffff"); else Half(1, "#1f1f1f", "#3c3c3c");
-        }
-        bands.Clip = new RectangleGeometry(new Rect(0, 0, 58, 40), 7, 7);
-        var swatch = new Border
-        {
-            Width = 62, Height = 44, CornerRadius = new CornerRadius(9), Padding = new Thickness(selected ? 0 : 1), BorderThickness = new Thickness(selected ? 2 : 1),
-            BorderBrush = selected ? new SolidColorBrush(Themes.AccentOf(s.CurrentTheme, s.IsDark)) : _hair, Child = bands,
-        };
-        var label = new TextBlock
-        {
-            Text = L.T(theme.En, theme.Tr), Foreground = selected ? _fg : _fgDim, FontSize = 11, FontWeight = selected ? FontWeights.SemiBold : FontWeights.Normal,
-            HorizontalAlignment = HorizontalAlignment.Center, Margin = new Thickness(0, 4, 0, 0), TextTrimming = TextTrimming.CharacterEllipsis,
-        };
-        var stack = new StackPanel { HorizontalAlignment = HorizontalAlignment.Center };
-        stack.Children.Add(swatch);
-        stack.Children.Add(label);
-        var card = new Border { Background = Brushes.Transparent, Padding = new Thickness(2, 5, 2, 7), Child = stack, Cursor = Cursors.Hand, ToolTip = L.T(theme.En, theme.Tr) };
-        // Swallow the press so the card does not start a window drag, which would eat the release.
-        card.MouseLeftButtonDown += (_, e) => e.Handled = true;
-        card.MouseLeftButtonUp += (_, e) =>
-        {
-            e.Handled = true;
-            s.ColorTheme = theme.Key;
-            s.Save();
-        };
-        return card;
-    }
 
     // ---- Software Update row
 
