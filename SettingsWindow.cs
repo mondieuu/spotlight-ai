@@ -108,7 +108,6 @@ public sealed class SettingsWindow : Window
         _content.Children.Add(AppCard());
 
         // Appearance
-        // Appearance
         _content.Children.Add(Group(
             Row("", Color.FromRgb(0xAF, 0x52, 0xDE), L.T("Appearance", "Görünüm"), Segmented(
                 new[] { L.T("System", "Sistem"), L.T("Light", "Açık"), L.T("Dark", "Koyu") },
@@ -123,10 +122,12 @@ public sealed class SettingsWindow : Window
                 new[] { "English", "Türkçe" },
                 s.IsTurkish ? 1 : 0,
                 i => { s.Language = i == 1 ? "tr" : "en"; s.Save(); })),
-            KeyRow(s),
-            ModelRow(s)));
-        _content.Children.Add(Footnote(L.T("Your key is encrypted on this PC and only sent to OpenRouter. What you ask goes to OpenRouter and the model you chose, under their terms and pricing; conversations are not saved here. Model names are listed at openrouter.ai/models.",
-                                           "Anahtarın bu bilgisayarda şifrelenir ve yalnızca OpenRouter'a gönderilir. Sorduğun şeyler OpenRouter'a ve seçtiğin modele, onların koşul ve ücretleriyle gider; sohbetler burada saklanmaz. Model adları openrouter.ai/models sayfasında.")));
+            Row("\uE8BD", Color.FromRgb(0xFF, 0x95, 0x00), L.T("AI service", "Yapay zekâ"), Segmented(
+                new[] { "ChatGPT", "Gemini" },
+                (int)s.Provider,
+                i => { s.Provider = (AiProvider)i; s.Save(); }))));
+        _content.Children.Add(Footnote(L.T("You sign in on the service's own website. What you write goes to that service; Spotlight AI does not read or store it.",
+                                           "Hizmetin kendi sitesinde giriş yaparsın. Yazdıkların o hizmete gider; Spotlight AI bunları okumaz ve saklamaz.")));
 
         // General
         _recorder = RecorderButton();
@@ -180,60 +181,6 @@ public sealed class SettingsWindow : Window
                                            "Yeni sürümler projenin GitHub sürümlerinden gelir ve yerinde kurulur; ayarların korunur.")));
         RefreshUpdate();
     }
-
-    // ---- API key and model
-
-    private Grid KeyRow(AppSettings s)
-    {
-        bool saved = s.GetKey() != null;
-        var panel = new StackPanel { Orientation = Orientation.Horizontal };
-        if (saved)
-        {
-            panel.Children.Add(new TextBlock { Text = L.T("Saved", "Kayıtlı"), Foreground = SwitchOn, FontSize = 13, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, 0, 4, 0) });
-            var remove = SmallButton(L.T("Remove", "Kaldır"));
-            remove.Click += (_, _) => { s.SetKey(null); Dispatcher.BeginInvoke(Rebuild); };
-            panel.Children.Add(remove);
-        }
-        else
-        {
-            var box = new PasswordBox { Width = 130, Height = 28, Background = _segBg, Foreground = _fg, CaretBrush = _fg, BorderThickness = new Thickness(0), VerticalContentAlignment = VerticalAlignment.Center, Padding = new Thickness(8, 0, 8, 0) };
-            System.Windows.Automation.AutomationProperties.SetName(box, L.T("API key", "API anahtarı"));
-            void Store()
-            {
-                if (box.Password.Trim().Length == 0) return;
-                if (AiClient.FindKey(box.Password) is { } key)
-                {
-                    s.SetKey(key);
-                    Dispatcher.BeginInvoke(Rebuild);
-                    return;
-                }
-                box.Clear();
-                SetNote(L.T("That is not an OpenRouter key. A key starts with sk-or-. Nothing was saved.", "Bu bir OpenRouter anahtarı değil. Anahtar sk-or- ile başlar. Hiçbir şey kaydedilmedi."), true);
-            }
-            var save = SmallButton(L.T("Save", "Kaydet"));
-            save.Click += (_, _) => Store();
-            box.KeyDown += (_, e) => { if (e.Key == Key.Enter) Store(); };
-            var get = SmallButton(L.T("Get key", "Anahtar al"));
-            get.Click += (_, _) => System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(AiClient.KeyPage) { UseShellExecute = true });
-            panel.Children.Add(box);
-            panel.Children.Add(save);
-            panel.Children.Add(get);
-        }
-        return Row("\uE192", Color.FromRgb(0x34, 0xC7, 0x59), L.T("OpenRouter key", "OpenRouter anahtarı"), panel);
-    }
-
-    private Grid ModelRow(AppSettings s)
-    {
-        var box = new TextBox { Text = s.GetModel(), Width = 250, Height = 28, Background = _segBg, Foreground = _fg, CaretBrush = _fg, BorderThickness = new Thickness(0), VerticalContentAlignment = VerticalAlignment.Center, Padding = new Thickness(8, 0, 8, 0) };
-        box.LostFocus += (_, _) => s.SetModel(box.Text);
-        return Row("\uE950", Color.FromRgb(0x5E, 0x5C, 0xE6), L.T("Model", "Model"), box);
-    }
-
-    private Button SmallButton(string text) => new()
-    {
-        Content = text, Height = 28, MinWidth = 60, Margin = new Thickness(6, 0, 0, 0), Padding = new Thickness(10, 0, 10, 0), FontSize = 12.5,
-        Foreground = _fg, Background = _segBg, Template = RoundTemplate(7), Cursor = Cursors.Hand,
-    };
 
     // ---- Software Update row
 

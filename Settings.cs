@@ -1,6 +1,4 @@
 using System;
-using System.Security.Cryptography;
-using System.Text;
 using System.IO;
 using System.Text.Json;
 using Microsoft.Win32;
@@ -9,14 +7,18 @@ namespace Odak;
 
 public enum ThemeMode { System, Light, Dark }
 
+public enum AiProvider { ChatGpt, Gemini }
+
+/// <summary>
+/// User preferences, stored in %LOCALAPPDATA%\Spotlight AI\settings.json.
+/// English is the default language; Turkish is fully supported.
+/// </summary>
 public sealed class AppSettings
 {
     public ThemeMode Theme { get; set; } = ThemeMode.System;
     /// <summary>"en" (default) or "tr".</summary>
     public string Language { get; set; } = "en";
-    /// <summary>The OpenRouter API key, encrypted with Windows DPAPI: only this Windows user on this PC can read it.</summary>
-    public string? ProtectedKey { get; set; }
-    public string? Model { get; set; }
+    public AiProvider Provider { get; set; } = AiProvider.ChatGpt;
     /// <summary>Global shortcut: modifier flags (Alt = 1, Ctrl = 2, Shift = 4, Win = 8) and virtual-key code.</summary>
     public uint HotkeyModifiers { get; set; } = 0x5;
     public uint HotkeyKey { get; set; } = 0x20;
@@ -46,28 +48,6 @@ public sealed class AppSettings
         }
     }
 
-    public string? GetKey()
-    {
-        if (ProtectedKey == null) return null;
-        // Anything saved that is not really a key counts as no key, so the user is asked for it again.
-        try { return AiClient.FindKey(Encoding.UTF8.GetString(ProtectedData.Unprotect(Convert.FromBase64String(ProtectedKey), null, DataProtectionScope.CurrentUser))); }
-        catch (Exception ex) when (ex is CryptographicException or FormatException) { return null; }
-    }
-
-    public void SetKey(string? key)
-    {
-        ProtectedKey = string.IsNullOrWhiteSpace(key) ? null : Convert.ToBase64String(ProtectedData.Protect(Encoding.UTF8.GetBytes(key.Trim()), null, DataProtectionScope.CurrentUser));
-        Save();
-    }
-
-    public string GetModel() => string.IsNullOrWhiteSpace(Model) ? AiClient.DefaultModel : Model;
-
-    public void SetModel(string model)
-    {
-        Model = string.IsNullOrWhiteSpace(model) || model.Trim() == AiClient.DefaultModel ? null : model.Trim();
-        Save();
-    }
-
     public void Save()
     {
         try
@@ -84,7 +64,14 @@ public sealed class AppSettings
         try
         {
             if (File.Exists(File_))
-                return JsonSerializer.Deserialize<AppSettings>(File.ReadAllText(File_)) ?? new AppSettings();
+            {
+                var json = File.ReadAllText(File_);
+                var loaded = JsonSerializer.Deserialize<AppSettings>(json) ?? new AppSettings();
+                // Version 1.0 and earlier builds also offered other services.
+                if (!Enum.IsDefined(loaded.Provider)) loaded.Provider = AiProvider.ChatGpt;
+                if (json.Contains("\"ProtectedKey\"")) File.WriteAllText(File_, JsonSerializer.Serialize(loaded, new JsonSerializerOptions { WriteIndented = true }));
+                return loaded;
+            }
         }
         catch { }
         return new AppSettings();

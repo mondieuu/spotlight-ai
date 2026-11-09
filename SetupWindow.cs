@@ -153,8 +153,8 @@ public sealed class SetupWindow : Window
         {
             case Stage.Start when _uninstall:
                 _title.Text = L.T("Uninstall Spotlight AI?", "Spotlight AI kaldırılsın mı?");
-                _body.Text = L.T("The program, settings, your saved API key, shortcuts and registry entries will be removed. Nothing from Spotlight AI is left on your PC.",
-                                 "Program, ayarlar, kayıtlı API anahtarın, kısayollar ve kayıt defteri girdileri silinir. Bilgisayarda Spotlight AI'tan iz kalmaz.");
+                _body.Text = L.T("The program, settings, your sign-ins in this app, shortcuts and registry entries will be removed. Nothing from Spotlight AI is left on your PC.",
+                                 "Program, ayarlar, bu uygulamadaki oturumların, kısayollar ve kayıt defteri girdileri silinir. Bilgisayarda Spotlight AI'tan iz kalmaz.");
                 SetOptions();
                 _primary.Content = L.T("Uninstall", "Kaldır");
                 _note.Text = "";
@@ -163,8 +163,8 @@ public sealed class SetupWindow : Window
             case Stage.Start:
                 bool update = Installer.IsInstalled;
                 _title.Text = update ? L.T("Update Spotlight AI", "Spotlight AI'ı Güncelle") : "Spotlight AI";
-                _body.Text = L.T("Ask AI from a glass search box, with your own OpenRouter API key. Open it with Alt+Shift+Space.",
-                                 "Kendi OpenRouter API anahtarınla yapay zekâya cam bir arama kutusundan sor. Alt+Shift+Space ile aç.");
+                _body.Text = L.T("ChatGPT and Gemini in a glass panel, with your own account. Open it with Alt+Shift+Space.",
+                                 "Kendi hesabınla ChatGPT ve Gemini, cam bir panelde. Alt+Shift+Space ile aç.");
                 SetOptions(_startup, _desktop);
                 _primary.Content = update ? L.T("Update", "Güncelle") : L.T("Install", "Kur");
                 _note.Text = L.T("Installs for this user only; no administrator rights needed.", "Yalnızca bu kullanıcıya kurulur, yönetici izni gerekmez.") + "\n" + Installer.InstallDir;

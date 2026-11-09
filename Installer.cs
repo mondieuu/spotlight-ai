@@ -163,7 +163,7 @@ public static class Installer
         shortcut.Arguments = args;
         shortcut.WorkingDirectory = Path.GetDirectoryName(target);
         shortcut.IconLocation = target + ",0";
-        shortcut.Description = "Ask AI from a glass search box";
+        shortcut.Description = "ChatGPT and Gemini in a glass panel";
         shortcut.Save();
     }
 

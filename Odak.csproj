@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net10.0-windows</TargetFramework>
+    <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
     <UseWPF>true</UseWPF>
     <UseWindowsForms>true</UseWindowsForms>
     <!-- WPF + WinForms together: implicit usings cause name clashes, so they are off. -->
@@ -12,7 +12,7 @@
     <RootNamespace>Odak</RootNamespace>
     <ApplicationIcon>Assets\odak.ico</ApplicationIcon>
     <ApplicationManifest>app.manifest</ApplicationManifest>
-    <Version>1.0.1</Version>
+    <Version>1.1.0</Version>
     <Product>Spotlight AI</Product>
     <!-- A background tray app: fewer GC threads and less reserved memory. -->
     <ServerGarbageCollection>false</ServerGarbageCollection>
@@ -31,7 +31,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="*" />
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.*" />
   </ItemGroup>
 
   <ItemGroup>
