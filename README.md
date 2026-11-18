@@ -15,7 +15,7 @@ Not affiliated with or endorsed by OpenAI, Google or Apple. ChatGPT, Gemini and 
 
 ## Install
 
-Download **[SpotlightAISetup.exe](https://github.com/mondieuu/spotlight-ai/releases/latest/download/SpotlightAISetup.exe)** and run it. No administrator rights are needed. The file is not digitally signed, so SmartScreen may warn: **More info → Run anyway**.
+Download **[SpotlightAISetup.exe](https://github.com/mondieuu/spotlight-ai/releases/latest/download/SpotlightAISetup.exe)** and run it: a standard setup wizard installs Spotlight AI into Program Files, so Windows asks for administrator approval. Settings and sign-ins stay with each Windows user. Uninstall it from **Settings › Apps**. The file is not digitally signed, so SmartScreen may warn: **More info → Run anyway**.
 
 ## Build
 
@@ -23,4 +23,10 @@ Download **[SpotlightAISetup.exe](https://github.com/mondieuu/spotlight-ai/relea
 dotnet publish -c Release -r win-x64 -o publish
 ```
 
-Rename `publish\SpotlightAI.exe` to `SpotlightAISetup.exe`: an exe with "Setup" in its name opens as the installer.
+Then build the setup wizard with [NSIS 3](https://nsis.sourceforge.io):
+
+```bash
+makensis /DVERSION=1.2.0 installer\SpotlightAI.nsi
+```
+
+This writes `publish\SpotlightAISetup.exe`.

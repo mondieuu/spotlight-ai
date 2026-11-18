@@ -166,8 +166,9 @@ public static class Updater
     }
 
     /// <summary>Runs the downloaded setup in silent update mode.</summary>
+    // "/S" runs the setup wizard silently; "--update" is for the self-installing setup of versions 1.0 and 1.1.
     public static void Launch(string setupPath) =>
-        System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(setupPath, "--update") { UseShellExecute = true });
+        System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(setupPath, "/S --update") { UseShellExecute = true });
 
     private static void Set(State state)
     {

@@ -210,7 +210,14 @@ public partial class App : Application
         startup.CheckedChanged += (_, _) => SetStartup(startup.Checked);
         menu.Items.Add(startup);
         menu.Items.Add(new Forms.ToolStripSeparator());
-        if (Installer.IsInstalled)
+        // Installed by the setup wizard: its uninstaller sits next to the program.
+        var wizardUninstaller = Path.Combine(Path.GetDirectoryName(Environment.ProcessPath) ?? "", "Uninstall Spotlight AI.exe");
+        if (File.Exists(wizardUninstaller))
+        {
+            menu.Items.Add(L.T("Uninstall Spotlight AI…", "Spotlight AI'ı kaldır…"), null, (_, _) =>
+                Process.Start(new ProcessStartInfo(wizardUninstaller) { UseShellExecute = true }));
+        }
+        else if (Installer.IsInstalled)
         {
             menu.Items.Add(L.T("Uninstall Spotlight AI…", "Spotlight AI'ı kaldır…"), null, (_, _) =>
                 Process.Start(new ProcessStartInfo(Installer.InstalledExe, "--uninstall") { UseShellExecute = true }));
